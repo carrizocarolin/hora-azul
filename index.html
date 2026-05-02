@@ -161,6 +161,51 @@ h2 {
 
 .controls { display: grid; gap: 10px; }
 
+.pad-fx-rack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pad-fx-card {
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 9px;
+}
+
+.pad-fx-card h3 {
+  margin: 0 0 8px;
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pad-fx-card label {
+  display: grid;
+  grid-template-columns: 62px 1fr 54px;
+  gap: 7px;
+  align-items: center;
+  font-size: .68rem;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.pad-fx-card input[type="range"] {
+  width: 100%;
+}
+
+.pad-fx-card .fx-value {
+  text-align: right;
+  font-size: .62rem;
+}
+
+@media (max-width: 700px) {
+  .pad-fx-rack { grid-template-columns: 1fr; }
+}
+
 .control {
   background: rgba(255,255,255,0.05);
   border-radius: 12px;
@@ -213,6 +258,7 @@ input[type="range"] { width: 100%; }
           </div>
         </div>
         <div class="pads" id="pads"></div>
+        <div id="padFxRack" class="pad-fx-rack"></div>
       </div>
 
       <aside class="panel controls">
@@ -245,26 +291,6 @@ input[type="range"] { width: 100%; }
     </section>
 
     <section class="grid" style="margin-top:18px;">
-      <aside class="panel controls">
-        <div class="section-title"><h2>Canal FX del pad</h2><span class="status">Pad <span id="selectedPadText">1</span></span></div>
-        <div class="control">
-          <label><span>Volumen pad</span><span id="padVolVal">1.00</span></label>
-          <input id="padVolume" type="range" min="0" max="1.5" step="0.01" value="1">
-        </div>
-        <div class="control">
-          <label><span>Low-pass</span><span id="lpVal">16000 Hz</span></label>
-          <input id="lp" type="range" min="200" max="16000" step="1" value="16000">
-        </div>
-        <div class="control">
-          <label><span>High-pass</span><span id="hpVal">20 Hz</span></label>
-          <input id="hp" type="range" min="20" max="8000" step="1" value="20">
-        </div>
-        <div class="control">
-          <label><span>Reverb</span><span id="reverbVal">0%</span></label>
-          <input id="reverb" type="range" min="0" max="1" step="0.01" value="0">
-        </div>
-      </aside>
-
       <section class="panel">
         <div class="section-title">
           <h2>Secuenciador 16 pasos</h2>
@@ -283,6 +309,7 @@ input[type="range"] { width: 100%; }
   <script>
     const padCount = 8;
     const padsEl = document.querySelector('#pads');
+    const padFxRack = document.querySelector('#padFxRack');
     const sequencerEl = document.querySelector('#sequencer');
     const initBtn = document.querySelector('#initBtn');
     const recordBtn = document.querySelector('#recordBtn');
@@ -309,14 +336,7 @@ input[type="range"] { width: 100%; }
     const masterVolume = document.querySelector('#masterVolume');
     const masterVolVal = document.querySelector('#masterVolVal');
 
-    const padVolume = document.querySelector('#padVolume');
-    const lp = document.querySelector('#lp');
-    const hp = document.querySelector('#hp');
-    const reverb = document.querySelector('#reverb');
-    const padVolVal = document.querySelector('#padVolVal');
-    const lpVal = document.querySelector('#lpVal');
-    const hpVal = document.querySelector('#hpVal');
-    const reverbVal = document.querySelector('#reverbVal');
+    
 
     let audioCtx;
     let masterGain;
@@ -391,7 +411,49 @@ input[type="range"] { width: 100%; }
         });
         padsEl.appendChild(btn);
       });
+      renderPadFxRack();
     }
+
+    function renderPadFxRack() {
+      const loadedPads = pads
+        .map((pad, index) => ({ pad, index }))
+        .filter(item => item.pad.buffer);
+
+      padFxRack.innerHTML = '';
+      if (!loadedPads.length) return;
+
+      loadedPads.forEach(({ pad, index }) => {
+        const card = document.createElement('div');
+        card.className = 'pad-fx-card';
+        card.innerHTML = `
+          <h3>Pad ${index + 1} · FX</h3>
+          ${fxSliderMarkup(index, 'volume', 'Vol', 0, 1.5, 0.01, pad.fx.volume, Number(pad.fx.volume).toFixed(2))}
+          ${fxSliderMarkup(index, 'lowpass', 'LPF', 200, 16000, 1, pad.fx.lowpass, `${Math.round(pad.fx.lowpass)} Hz`)}
+          ${fxSliderMarkup(index, 'highpass', 'HPF', 20, 8000, 1, pad.fx.highpass, `${Math.round(pad.fx.highpass)} Hz`)}
+          ${fxSliderMarkup(index, 'reverb', 'Rev', 0, 1, 0.01, pad.fx.reverb, `${Math.round(pad.fx.reverb * 100)}%`)}
+        `;
+        padFxRack.appendChild(card);
+      });
+    }
+
+    function fxSliderMarkup(padIndex, fxName, label, min, max, step, value, displayValue) {
+      return `
+        <label>
+          <span>${label}</span>
+          <input class="pad-fx-slider" data-pad="${padIndex}" data-fx="${fxName}" type="range" min="${min}" max="${max}" step="${step}" value="${value}">
+          <span class="fx-value">${displayValue}</span>
+        </label>
+      `;
+    }
+
+    padFxRack.addEventListener('input', e => {
+      const input = e.target.closest('.pad-fx-slider');
+      if (!input) return;
+      const padIndex = Number(input.dataset.pad);
+      const fxName = input.dataset.fx;
+      pads[padIndex].fx[fxName] = Number(input.value);
+      renderPadFxRack();
+    });
 
     function renderSequencer() {
       sequencerEl.innerHTML = '';
@@ -419,22 +481,8 @@ input[type="range"] { width: 100%; }
 
     function selectPad(index) {
       selectedPad = index;
-      selectedPadText.textContent = index + 1;
-      const fx = pads[index].fx;
-      padVolume.value = fx.volume;
-      lp.value = fx.lowpass;
-      hp.value = fx.highpass;
-      reverb.value = fx.reverb;
-      updateFxLabels();
+      if (selectedPadText) selectedPadText.textContent = index + 1;
       renderPads();
-    }
-
-    function updateFxLabels() {
-      const fx = pads[selectedPad].fx;
-      padVolVal.textContent = Number(fx.volume).toFixed(2);
-      lpVal.textContent = `${Math.round(fx.lowpass)} Hz`;
-      hpVal.textContent = `${Math.round(fx.highpass)} Hz`;
-      reverbVal.textContent = `${Math.round(fx.reverb * 100)}%`;
     }
 
     function makePlayableBuffer(buffer, reversed) {
@@ -695,22 +743,7 @@ input[type="range"] { width: 100%; }
       if (masterGain) masterGain.gain.value = Number(masterVolume.value);
     });
 
-    padVolume.addEventListener('input', () => {
-      pads[selectedPad].fx.volume = Number(padVolume.value);
-      updateFxLabels();
-    });
-    lp.addEventListener('input', () => {
-      pads[selectedPad].fx.lowpass = Number(lp.value);
-      updateFxLabels();
-    });
-    hp.addEventListener('input', () => {
-      pads[selectedPad].fx.highpass = Number(hp.value);
-      updateFxLabels();
-    });
-    reverb.addEventListener('input', () => {
-      pads[selectedPad].fx.reverb = Number(reverb.value);
-      updateFxLabels();
-    });
+    
 
     seqPlayBtn.addEventListener('click', async () => {
       if (!audioCtx) await initAudio();
@@ -748,3 +781,4 @@ input[type="range"] { width: 100%; }
   </script>
 </body>
 </html>
+
