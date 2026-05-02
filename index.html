@@ -244,6 +244,9 @@ input[type="range"] { width: 100%; }
         <button id="recordBtn" class="danger" disabled>Grabar</button>
         <button id="stopBtn" disabled>Stop rec</button>
         <button id="assignBtn" class="ok" disabled>Asignar sample</button>
+        <button id="mixRecordBtn" disabled>Grabar mix</button>
+        <button id="mixStopBtn" disabled>Stop mix</button>
+        <button id="mixDownloadBtn" class="ok" disabled>Descargar mix</button>
         <div class="status"><span class="rec-dot"></span><span id="statusText">Audio sin activar</span></div>
       </div>
     </header>
@@ -315,6 +318,9 @@ input[type="range"] { width: 100%; }
     const recordBtn = document.querySelector('#recordBtn');
     const stopBtn = document.querySelector('#stopBtn');
     const assignBtn = document.querySelector('#assignBtn');
+    const mixRecordBtn = document.querySelector('#mixRecordBtn');
+    const mixStopBtn = document.querySelector('#mixStopBtn');
+    const mixDownloadBtn = document.querySelector('#mixDownloadBtn');
     const chopBtn = document.querySelector('#chopBtn');
     const statusText = document.querySelector('#statusText');
     const recStatus = document.querySelector('#recStatus');
@@ -340,6 +346,10 @@ input[type="range"] { width: 100%; }
 
     let audioCtx;
     let masterGain;
+    let mixDestination;
+    let mixRecorder;
+    let mixChunks = [];
+    let mixBlob = null;
     let reverbBuffer;
     let micStream;
     let recorder;
@@ -387,6 +397,8 @@ input[type="range"] { width: 100%; }
       masterGain = audioCtx.createGain();
       masterGain.gain.value = Number(masterVolume.value);
       masterGain.connect(audioCtx.destination);
+      mixDestination = audioCtx.createMediaStreamDestination();
+      masterGain.connect(mixDestination);
       reverbBuffer = createReverbImpulse(audioCtx);
     }
 
@@ -395,6 +407,7 @@ input[type="range"] { width: 100%; }
       await audioCtx.resume();
       micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       recordBtn.disabled = false;
+      mixRecordBtn.disabled = false;
       initBtn.disabled = true;
       setStatus('Audio activo. Listo para grabar.');
     }
@@ -693,6 +706,43 @@ input[type="range"] { width: 100%; }
       pads[selectedPad].mode = 'oneshot';
       renderPads();
       setStatus(`Sample completo asignado al pad ${selectedPad + 1}.`);
+    });
+
+    mixRecordBtn.addEventListener('click', async () => {
+      if (!audioCtx) await initAudio();
+      await audioCtx.resume();
+      mixChunks = [];
+      mixBlob = null;
+      mixRecorder = new MediaRecorder(mixDestination.stream);
+      mixRecorder.ondataavailable = e => {
+        if (e.data && e.data.size > 0) mixChunks.push(e.data);
+      };
+      mixRecorder.onstop = () => {
+        mixBlob = new Blob(mixChunks, { type: mixRecorder.mimeType || 'audio/webm' });
+        mixDownloadBtn.disabled = false;
+        mixRecordBtn.disabled = false;
+        mixStopBtn.disabled = true;
+        setStatus('Mix final grabado. Ya podés descargarlo.');
+      };
+      mixRecorder.start();
+      mixRecordBtn.disabled = true;
+      mixStopBtn.disabled = false;
+      mixDownloadBtn.disabled = true;
+      setStatus('Grabando producción final... Tocá pads, secuencias y FX.');
+    });
+
+    mixStopBtn.addEventListener('click', () => {
+      if (mixRecorder && mixRecorder.state === 'recording') mixRecorder.stop();
+    });
+
+    mixDownloadBtn.addEventListener('click', () => {
+      if (!mixBlob) return;
+      const url = URL.createObjectURL(mixBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hora-azul-mix-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
     });
 
     chopBtn.addEventListener('click', () => {
