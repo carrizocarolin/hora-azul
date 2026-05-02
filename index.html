@@ -3,20 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mini Sampler Web</title>
+  <title>Hora Azul Sampler</title>
   <style>
     :root {
-      --bg: #111217;
-      --panel: #1b1d25;
-      --panel-2: #232633;
-      --text: #f3f3f7;
-      --muted: #a9adbd;
-      --accent: #ff7a1a;
-      --danger: #ff3b5f;
-      --ok: #50e3a4;
-      --pad: #2c3040;
-      --pad-active: #ff9d45;
-      --line: #343849;
+      --bg: #090b13;
+      --panel: #151824;
+      --panel-2: #202537;
+      --text: #f5f3ff;
+      --muted: #a9a7bb;
+      --accent: #8f5cff;
+      --accent-2: #38d5ff;
+      --danger: #ff415d;
+      --ok: #5cffb1;
+      --line: #31374d;
+      --pad: #252b3e;
+      --pad-active: #8f5cff;
     }
 
     * { box-sizing: border-box; }
@@ -25,12 +26,15 @@
       margin: 0;
       min-height: 100vh;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #272a36 0, var(--bg) 48%);
       color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(56,213,255,.18), transparent 36%),
+        radial-gradient(circle at top right, rgba(143,92,255,.2), transparent 42%),
+        var(--bg);
     }
 
     main {
-      width: min(1180px, calc(100% - 28px));
+      width: min(1240px, calc(100% - 28px));
       margin: 0 auto;
       padding: 28px 0 48px;
     }
@@ -40,28 +44,29 @@
       justify-content: space-between;
       align-items: flex-start;
       gap: 20px;
-      margin-bottom: 22px;
+      margin-bottom: 18px;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(2rem, 4vw, 4.5rem);
-      letter-spacing: -0.07em;
-      line-height: 0.9;
+      font-size: clamp(2.2rem, 5vw, 5rem);
+      letter-spacing: -0.08em;
+      line-height: .9;
     }
 
     .subtitle {
-      margin-top: 12px;
+      margin: 12px 0 0;
       color: var(--muted);
-      max-width: 720px;
+      max-width: 760px;
       line-height: 1.5;
     }
 
     .transport, .panel {
-      background: linear-gradient(180deg, var(--panel), #161821);
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
       border: 1px solid var(--line);
-      border-radius: 22px;
-      box-shadow: 0 20px 50px rgba(0,0,0,.28);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.34);
+      backdrop-filter: blur(12px);
     }
 
     .transport {
@@ -70,34 +75,41 @@
       gap: 10px;
       flex-wrap: wrap;
       justify-content: flex-end;
-      min-width: 290px;
+      min-width: 310px;
     }
 
-    button, select, input[type="range"] {
-      font: inherit;
-    }
+    button, select, input { font: inherit; }
 
-    button {
-      border: 0;
+    button, select {
+      border: 1px solid rgba(255,255,255,.08);
       border-radius: 14px;
-      padding: 11px 14px;
+      padding: 10px 13px;
       background: var(--panel-2);
       color: var(--text);
       cursor: pointer;
       transition: transform .08s ease, background .15s ease, opacity .15s ease;
     }
 
-    button:hover { background: #303548; }
+    select { min-height: 42px; }
+    button:hover, select:hover { background: #2c334b; }
     button:active { transform: translateY(1px) scale(.98); }
     button:disabled { opacity: .45; cursor: not-allowed; }
 
-    .primary { background: var(--accent); color: #1c1108; font-weight: 800; }
-    .danger { background: var(--danger); color: white; }
-    .ok { background: var(--ok); color: #062116; font-weight: 800; }
+    input[type="number"] {
+      background: #0f1320;
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .primary { background: linear-gradient(135deg, var(--accent), #b58cff); color: #10081d; font-weight: 900; }
+    .danger { background: var(--danger); color: white; font-weight: 800; }
+    .ok { background: var(--ok); color: #052116; font-weight: 900; }
 
     .grid {
       display: grid;
-      grid-template-columns: 1.35fr .85fr;
+      grid-template-columns: 1.25fr .85fr;
       gap: 18px;
     }
 
@@ -113,7 +125,7 @@
 
     h2 {
       margin: 0;
-      font-size: 1rem;
+      font-size: .95rem;
       text-transform: uppercase;
       letter-spacing: .14em;
       color: var(--muted);
@@ -126,9 +138,9 @@
     }
 
     .pad {
-      min-height: 118px;
-      background: linear-gradient(180deg, #34394b, var(--pad));
-      border: 1px solid #464b61;
+      min-height: 120px;
+      background: linear-gradient(180deg, #30364d, var(--pad));
+      border: 1px solid #454d69;
       border-radius: 22px;
       padding: 12px;
       text-align: left;
@@ -137,38 +149,24 @@
     }
 
     .pad.active {
-      background: linear-gradient(180deg, var(--pad-active), #d85c10);
-      color: #1a0d04;
-      box-shadow: 0 0 0 3px rgba(255,122,26,.22), 0 18px 35px rgba(255,122,26,.2);
+      background: linear-gradient(180deg, #a47cff, #5b31c9);
+      color: white;
+      box-shadow: 0 0 0 3px rgba(143,92,255,.25), 0 18px 35px rgba(143,92,255,.2);
     }
 
-    .pad .num {
-      font-weight: 900;
-      font-size: 1.1rem;
-    }
-
-    .pad .name {
-      margin-top: 24px;
-      color: inherit;
-      opacity: .8;
-      font-size: .88rem;
-      word-break: break-word;
-    }
-
+    .pad .num { font-weight: 950; font-size: 1.15rem; }
+    .pad .name { margin-top: 22px; opacity: .82; font-size: .86rem; word-break: break-word; }
     .pad .mode {
       position: absolute;
       right: 10px;
       bottom: 10px;
-      font-size: .72rem;
+      font-size: .7rem;
       opacity: .72;
       text-transform: uppercase;
       letter-spacing: .08em;
     }
 
-    .controls {
-      display: grid;
-      gap: 14px;
-    }
+    .controls { display: grid; gap: 14px; }
 
     .control {
       background: rgba(255,255,255,.035);
@@ -186,7 +184,7 @@
       margin-bottom: 8px;
     }
 
-    input[type="range"] { width: 100%; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
 
     .row {
       display: flex;
@@ -225,12 +223,12 @@
     .step {
       aspect-ratio: 1;
       border-radius: 8px;
-      background: #2b2f3f;
+      background: #242a3e;
       border: 1px solid #3b4054;
       padding: 0;
     }
 
-    .step.on { background: var(--accent); }
+    .step.on { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
     .step.playhead { outline: 2px solid white; }
 
     .hint {
@@ -240,7 +238,9 @@
       line-height: 1.5;
     }
 
-    @media (max-width: 920px) {
+    .tiny { font-size: .78rem; color: var(--muted); }
+
+    @media (max-width: 980px) {
       header, .grid { grid-template-columns: 1fr; display: grid; }
       .transport { justify-content: flex-start; }
     }
@@ -255,16 +255,16 @@
   <main>
     <header>
       <div>
-        <h1>Mini Sampler Web</h1>
+        <h1>Hora Azul</h1>
         <p class="subtitle">
-          Grabá audio desde el micrófono, asignalo a un pad, disparalo como one-shot, loop o gate, aplicá filtro/volumen y armá un patrón básico de 16 pasos.
+          Sampler web inspirado en el flujo SP: grabá, cortá en chops, asigná a pads one-shot y procesá cada pad con su propio canal de efectos.
         </p>
       </div>
       <div class="transport" id="recStatus">
         <button id="initBtn" class="primary">Activar audio</button>
         <button id="recordBtn" class="danger" disabled>Grabar</button>
         <button id="stopBtn" disabled>Stop rec</button>
-        <button id="assignBtn" class="ok" disabled>Asignar a pad seleccionado</button>
+        <button id="assignBtn" class="ok" disabled>Asignar sample</button>
         <div class="status"><span class="rec-dot"></span><span id="statusText">Audio sin activar</span></div>
       </div>
     </header>
@@ -272,57 +272,80 @@
     <section class="grid">
       <div class="panel">
         <div class="section-title">
-          <h2>Pads</h2>
+          <h2>Pads / Chops</h2>
           <div class="row">
-            <select id="playMode">
-              <option value="oneshot">One-shot</option>
-              <option value="loop">Loop</option>
-              <option value="gate">Gate</option>
-            </select>
             <button id="reverseBtn">Reverse pad</button>
+            <button id="clearPadBtn">Borrar pad</button>
           </div>
         </div>
         <div class="pads" id="pads"></div>
         <p class="hint">
-          Atajos: teclas 1–8 para tocar pads. Click en un pad vacío para seleccionarlo antes de asignar la grabación.
+          Atajos: teclas 1–8 para tocar. Cada chop se asigna como one-shot. Seleccioná un pad para editar sus FX independientes.
         </p>
       </div>
 
       <aside class="panel controls">
-        <div class="section-title"><h2>FX / Mixer</h2></div>
+        <div class="section-title"><h2>Grabación / Chop</h2></div>
         <div class="control">
-          <label><span>Volumen master</span><span id="volVal">0.85</span></label>
-          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.85">
-        </div>
-        <div class="control">
-          <label><span>Filtro low-pass</span><span id="filterVal">16000 Hz</span></label>
-          <input id="filter" type="range" min="200" max="16000" step="1" value="16000">
-        </div>
-        <div class="control">
-          <label><span>Resonancia</span><span id="qVal">0.7</span></label>
-          <input id="q" type="range" min="0.1" max="18" step="0.1" value="0.7">
-        </div>
-        <div class="control">
-          <label><span>Pad seleccionado</span><span id="selectedPadText">1</span></label>
+          <label><span>Último sample</span><span id="lastSampleText">ninguno</span></label>
           <div class="row">
-            <button id="clearPadBtn">Borrar pad</button>
-            <button id="downloadBtn">Descargar último sample</button>
+            <button id="downloadBtn" disabled>Descargar</button>
           </div>
+        </div>
+        <div class="control">
+          <label><span>Cantidad de chops</span><span id="chopCountVal">8</span></label>
+          <input id="chopCount" type="range" min="2" max="8" step="1" value="8">
+          <div class="row" style="margin-top:10px">
+            <button id="chopBtn" class="primary" disabled>Cortar y asignar a pads</button>
+            <button id="autoMarkersBtn" disabled>Reset cortes</button>
+          </div>
+          <div class="tiny" style="margin-top:8px">Ahora podés mover los cortes manualmente sobre la waveform. Cada región se asigna a un pad como one-shot.</div>
+        </div>
+        <div class="control">
+          <label><span>Waveform / cortes</span><span id="markerInfo">sin sample</span></label>
+          <canvas id="waveform" width="620" height="150" style="width:100%;height:150px;background:#0b0f1a;border:1px solid var(--line);border-radius:14px;display:block;"></canvas>
+          <div class="tiny" style="margin-top:8px">Arrastrá las líneas verticales para ajustar los chops. Los bordes inicial y final quedan fijos.</div>
+        </div>
+        <div class="control">
+          <label><span>Master</span><span id="masterVolVal">0.85</span></label>
+          <input id="masterVolume" type="range" min="0" max="1" step="0.01" value="0.85">
         </div>
       </aside>
     </section>
 
-    <section class="panel" style="margin-top:18px;">
-      <div class="section-title">
-        <h2>Secuenciador 16 pasos</h2>
-        <div class="row">
-          <label class="status">BPM <input id="bpm" type="number" min="40" max="240" value="90" style="width:70px"></label>
-          <button id="seqPlayBtn">Play</button>
-          <button id="seqStopBtn">Stop</button>
+    <section class="grid" style="margin-top:18px;">
+      <aside class="panel controls">
+        <div class="section-title"><h2>Canal FX del pad</h2><span class="status">Pad <span id="selectedPadText">1</span></span></div>
+        <div class="control">
+          <label><span>Volumen pad</span><span id="padVolVal">1.00</span></label>
+          <input id="padVolume" type="range" min="0" max="1.5" step="0.01" value="1">
         </div>
-      </div>
-      <div class="status">Elegí un pad y prendé pasos. Cada fila corresponde al pad indicado.</div>
-      <div id="sequencer"></div>
+        <div class="control">
+          <label><span>Low-pass</span><span id="lpVal">16000 Hz</span></label>
+          <input id="lp" type="range" min="200" max="16000" step="1" value="16000">
+        </div>
+        <div class="control">
+          <label><span>High-pass</span><span id="hpVal">20 Hz</span></label>
+          <input id="hp" type="range" min="20" max="8000" step="1" value="20">
+        </div>
+        <div class="control">
+          <label><span>Reverb</span><span id="reverbVal">0%</span></label>
+          <input id="reverb" type="range" min="0" max="1" step="0.01" value="0">
+        </div>
+      </aside>
+
+      <section class="panel">
+        <div class="section-title">
+          <h2>Secuenciador 16 pasos</h2>
+          <div class="row">
+            <label class="status">BPM <input id="bpm" type="number" min="40" max="240" value="90" style="width:70px"></label>
+            <button id="seqPlayBtn">Play</button>
+            <button id="seqStopBtn">Stop</button>
+          </div>
+        </div>
+        <div class="status">Prendé pasos por pad. Los samples se disparan como one-shot.</div>
+        <div id="sequencer"></div>
+      </section>
     </section>
   </main>
 
@@ -334,9 +357,9 @@
     const recordBtn = document.querySelector('#recordBtn');
     const stopBtn = document.querySelector('#stopBtn');
     const assignBtn = document.querySelector('#assignBtn');
+    const chopBtn = document.querySelector('#chopBtn');
     const statusText = document.querySelector('#statusText');
     const recStatus = document.querySelector('#recStatus');
-    const playMode = document.querySelector('#playMode');
     const reverseBtn = document.querySelector('#reverseBtn');
     const selectedPadText = document.querySelector('#selectedPadText');
     const clearPadBtn = document.querySelector('#clearPadBtn');
@@ -344,48 +367,76 @@
     const seqPlayBtn = document.querySelector('#seqPlayBtn');
     const seqStopBtn = document.querySelector('#seqStopBtn');
     const bpmInput = document.querySelector('#bpm');
+    const lastSampleText = document.querySelector('#lastSampleText');
 
-    const volume = document.querySelector('#volume');
-    const filter = document.querySelector('#filter');
-    const q = document.querySelector('#q');
-    const volVal = document.querySelector('#volVal');
-    const filterVal = document.querySelector('#filterVal');
-    const qVal = document.querySelector('#qVal');
+    const chopCount = document.querySelector('#chopCount');
+    const chopCountVal = document.querySelector('#chopCountVal');
+    const autoMarkersBtn = document.querySelector('#autoMarkersBtn');
+    const waveformCanvas = document.querySelector('#waveform');
+    const waveCtx = waveformCanvas.getContext('2d');
+    const markerInfo = document.querySelector('#markerInfo');
+    const masterVolume = document.querySelector('#masterVolume');
+    const masterVolVal = document.querySelector('#masterVolVal');
+
+    const padVolume = document.querySelector('#padVolume');
+    const lp = document.querySelector('#lp');
+    const hp = document.querySelector('#hp');
+    const reverb = document.querySelector('#reverb');
+    const padVolVal = document.querySelector('#padVolVal');
+    const lpVal = document.querySelector('#lpVal');
+    const hpVal = document.querySelector('#hpVal');
+    const reverbVal = document.querySelector('#reverbVal');
 
     let audioCtx;
     let masterGain;
-    let masterFilter;
+    let reverbBuffer;
     let micStream;
     let recorder;
     let chunks = [];
     let lastBlob = null;
+    let lastBuffer = null;
     let selectedPad = 0;
     let activeSources = new Map();
     let seqTimer = null;
     let currentStep = 0;
+    let chopMarkers = [];
+    let draggingMarker = null;
+
+    function defaultFx() {
+      return { volume: 1, lowpass: 16000, highpass: 20, reverb: 0 };
+    }
 
     const pads = Array.from({ length: padCount }, (_, i) => ({
       name: `Pad ${i + 1}`,
       buffer: null,
       reversed: false,
-      mode: 'oneshot'
+      mode: 'oneshot',
+      fx: defaultFx()
     }));
 
     const pattern = Array.from({ length: padCount }, () => Array(16).fill(false));
 
-    function setStatus(text) {
-      statusText.textContent = text;
+    function setStatus(text) { statusText.textContent = text; }
+
+    function createReverbImpulse(ctx, seconds = 2.2, decay = 2.8) {
+      const rate = ctx.sampleRate;
+      const length = Math.floor(rate * seconds);
+      const impulse = ctx.createBuffer(2, length, rate);
+      for (let ch = 0; ch < 2; ch++) {
+        const data = impulse.getChannelData(ch);
+        for (let i = 0; i < length; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+        }
+      }
+      return impulse;
     }
 
     function createAudioGraph() {
       audioCtx = new AudioContext();
       masterGain = audioCtx.createGain();
-      masterFilter = audioCtx.createBiquadFilter();
-      masterFilter.type = 'lowpass';
-      masterFilter.frequency.value = Number(filter.value);
-      masterFilter.Q.value = Number(q.value);
-      masterGain.gain.value = Number(volume.value);
-      masterFilter.connect(masterGain).connect(audioCtx.destination);
+      masterGain.gain.value = Number(masterVolume.value);
+      masterGain.connect(audioCtx.destination);
+      reverbBuffer = createReverbImpulse(audioCtx);
     }
 
     async function initAudio() {
@@ -402,16 +453,11 @@
       pads.forEach((pad, i) => {
         const btn = document.createElement('button');
         btn.className = 'pad' + (i === selectedPad ? ' active' : '');
-        btn.innerHTML = `<div class="num">${i + 1}</div><div class="name">${pad.buffer ? pad.name : 'Vacío'}</div><div class="mode">${pad.reversed ? 'rev · ' : ''}${pad.mode}</div>`;
+        btn.innerHTML = `<div class="num">${i + 1}</div><div class="name">${pad.buffer ? pad.name : 'Vacío'}</div><div class="mode">${pad.reversed ? 'rev · ' : ''}one-shot</div>`;
         btn.addEventListener('mousedown', () => {
-          selectedPad = i;
-          selectedPadText.textContent = i + 1;
-          playMode.value = pads[i].mode;
-          renderPads();
+          selectPad(i);
           triggerPad(i);
         });
-        btn.addEventListener('mouseup', () => stopPad(i));
-        btn.addEventListener('mouseleave', () => { if (pads[i].mode === 'gate') stopPad(i); });
         padsEl.appendChild(btn);
       });
     }
@@ -440,6 +486,26 @@
       });
     }
 
+    function selectPad(index) {
+      selectedPad = index;
+      selectedPadText.textContent = index + 1;
+      const fx = pads[index].fx;
+      padVolume.value = fx.volume;
+      lp.value = fx.lowpass;
+      hp.value = fx.highpass;
+      reverb.value = fx.reverb;
+      updateFxLabels();
+      renderPads();
+    }
+
+    function updateFxLabels() {
+      const fx = pads[selectedPad].fx;
+      padVolVal.textContent = Number(fx.volume).toFixed(2);
+      lpVal.textContent = `${Math.round(fx.lowpass)} Hz`;
+      hpVal.textContent = `${Math.round(fx.highpass)} Hz`;
+      reverbVal.textContent = `${Math.round(fx.reverb * 100)}%`;
+    }
+
     function makePlayableBuffer(buffer, reversed) {
       if (!reversed) return buffer;
       const rev = audioCtx.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
@@ -455,12 +521,34 @@
       const pad = pads[index];
       if (!audioCtx || !pad.buffer) return;
 
-      if (pad.mode !== 'loop') stopPad(index);
-
       const source = audioCtx.createBufferSource();
       source.buffer = makePlayableBuffer(pad.buffer, pad.reversed);
-      source.loop = pad.mode === 'loop';
-      source.connect(masterFilter);
+
+      const hpFilter = audioCtx.createBiquadFilter();
+      hpFilter.type = 'highpass';
+      hpFilter.frequency.value = pad.fx.highpass;
+      hpFilter.Q.value = 0.7;
+
+      const lpFilter = audioCtx.createBiquadFilter();
+      lpFilter.type = 'lowpass';
+      lpFilter.frequency.value = pad.fx.lowpass;
+      lpFilter.Q.value = 0.7;
+
+      const dryGain = audioCtx.createGain();
+      const wetGain = audioCtx.createGain();
+      const outGain = audioCtx.createGain();
+      const convolver = audioCtx.createConvolver();
+
+      dryGain.gain.value = 1 - pad.fx.reverb;
+      wetGain.gain.value = pad.fx.reverb;
+      outGain.gain.value = pad.fx.volume;
+      convolver.buffer = reverbBuffer;
+
+      source.connect(hpFilter).connect(lpFilter);
+      lpFilter.connect(dryGain).connect(outGain);
+      lpFilter.connect(convolver).connect(wetGain).connect(outGain);
+      outGain.connect(masterGain);
+
       source.start(when ? when : audioCtx.currentTime);
 
       if (!activeSources.has(index)) activeSources.set(index, []);
@@ -471,18 +559,119 @@
       };
     }
 
-    function stopPad(index) {
-      const pad = pads[index];
-      if (pad.mode !== 'gate' && pad.mode !== 'loop') return;
-      const sources = activeSources.get(index) || [];
-      sources.forEach(src => { try { src.stop(); } catch (_) {} });
-      activeSources.set(index, []);
-    }
-
     async function decodeBlobToBuffer(blob) {
       const arrayBuffer = await blob.arrayBuffer();
       return await audioCtx.decodeAudioData(arrayBuffer);
     }
+
+    function sliceBuffer(buffer, startRatio, endRatio) {
+      const start = Math.floor(buffer.length * startRatio);
+      const end = Math.floor(buffer.length * endRatio);
+      const length = Math.max(1, end - start);
+      const out = audioCtx.createBuffer(buffer.numberOfChannels, length, buffer.sampleRate);
+      for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+        const sourceData = buffer.getChannelData(ch).subarray(start, end);
+        out.getChannelData(ch).set(sourceData);
+      }
+      return out;
+    }
+
+    function resetChopMarkers() {
+      const count = Number(chopCount.value);
+      chopMarkers = Array.from({ length: count + 1 }, (_, i) => i / count);
+      drawWaveform();
+    }
+
+    function drawWaveform() {
+      const w = waveformCanvas.width;
+      const h = waveformCanvas.height;
+      waveCtx.clearRect(0, 0, w, h);
+      waveCtx.fillStyle = '#0b0f1a';
+      waveCtx.fillRect(0, 0, w, h);
+
+      if (!lastBuffer) {
+        waveCtx.fillStyle = '#7e849b';
+        waveCtx.font = '16px system-ui';
+        waveCtx.fillText('Grabá un sample para ver la waveform', 22, h / 2);
+        markerInfo.textContent = 'sin sample';
+        return;
+      }
+
+      const data = lastBuffer.getChannelData(0);
+      const step = Math.ceil(data.length / w);
+      const amp = h * 0.42;
+      const mid = h / 2;
+
+      waveCtx.strokeStyle = '#38d5ff';
+      waveCtx.lineWidth = 1;
+      waveCtx.beginPath();
+      for (let x = 0; x < w; x++) {
+        let min = 1;
+        let max = -1;
+        const start = x * step;
+        const end = Math.min(start + step, data.length);
+        for (let i = start; i < end; i++) {
+          const v = data[i];
+          if (v < min) min = v;
+          if (v > max) max = v;
+        }
+        waveCtx.moveTo(x, mid + min * amp);
+        waveCtx.lineTo(x, mid + max * amp);
+      }
+      waveCtx.stroke();
+
+      chopMarkers.forEach((ratio, i) => {
+        const x = ratio * w;
+        waveCtx.strokeStyle = (i === 0 || i === chopMarkers.length - 1) ? '#5cffb1' : '#8f5cff';
+        waveCtx.lineWidth = (i === 0 || i === chopMarkers.length - 1) ? 2 : 3;
+        waveCtx.beginPath();
+        waveCtx.moveTo(x, 0);
+        waveCtx.lineTo(x, h);
+        waveCtx.stroke();
+
+        if (i > 0 && i < chopMarkers.length) {
+          waveCtx.fillStyle = '#f5f3ff';
+          waveCtx.font = '12px system-ui';
+          waveCtx.fillText(String(i), Math.min(w - 14, x + 5), 16);
+        }
+      });
+
+      markerInfo.textContent = `${chopMarkers.length - 1} chops · ${lastBuffer.duration.toFixed(2)}s`;
+    }
+
+    function canvasRatioFromEvent(e) {
+      const rect = waveformCanvas.getBoundingClientRect();
+      return Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    }
+
+    waveformCanvas.addEventListener('pointerdown', e => {
+      if (!lastBuffer || chopMarkers.length < 3) return;
+      const ratio = canvasRatioFromEvent(e);
+      let nearest = -1;
+      let nearestDist = Infinity;
+      for (let i = 1; i < chopMarkers.length - 1; i++) {
+        const dist = Math.abs(chopMarkers[i] - ratio);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearest = i;
+        }
+      }
+      if (nearest !== -1 && nearestDist < 0.04) {
+        draggingMarker = nearest;
+        waveformCanvas.setPointerCapture(e.pointerId);
+      }
+    });
+
+    waveformCanvas.addEventListener('pointermove', e => {
+      if (draggingMarker === null) return;
+      const prev = chopMarkers[draggingMarker - 1] + 0.005;
+      const next = chopMarkers[draggingMarker + 1] - 0.005;
+      chopMarkers[draggingMarker] = Math.min(next, Math.max(prev, canvasRatioFromEvent(e)));
+      drawWaveform();
+    });
+
+    waveformCanvas.addEventListener('pointerup', () => { draggingMarker = null; });
+    waveformCanvas.addEventListener('pointercancel', () => { draggingMarker = null; });
 
     initBtn.addEventListener('click', async () => {
       try { await initAudio(); }
@@ -493,12 +682,17 @@
       chunks = [];
       recorder = new MediaRecorder(micStream);
       recorder.ondataavailable = e => chunks.push(e.data);
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         lastBlob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+        lastBuffer = await decodeBlobToBuffer(lastBlob);
         assignBtn.disabled = false;
+        chopBtn.disabled = false;
+        autoMarkersBtn.disabled = false;
         downloadBtn.disabled = false;
         recStatus.classList.remove('recording');
-        setStatus('Grabación lista. Asignala a un pad.');
+        lastSampleText.textContent = `${lastBuffer.duration.toFixed(2)}s`;
+        resetChopMarkers();
+        setStatus('Grabación lista. Ajustá los cortes en la waveform o asignala entera.');
       };
       recorder.start();
       recStatus.classList.add('recording');
@@ -514,19 +708,29 @@
     });
 
     assignBtn.addEventListener('click', async () => {
-      if (!lastBlob) return;
-      const buffer = await decodeBlobToBuffer(lastBlob);
-      pads[selectedPad].buffer = buffer;
-      pads[selectedPad].name = `Grabación ${new Date().toLocaleTimeString()}`;
-      pads[selectedPad].mode = playMode.value;
+      if (!lastBuffer) return;
+      pads[selectedPad].buffer = lastBuffer;
+      pads[selectedPad].name = `Sample ${new Date().toLocaleTimeString()}`;
+      pads[selectedPad].mode = 'oneshot';
       renderPads();
-      setStatus(`Sample asignado al pad ${selectedPad + 1}.`);
+      setStatus(`Sample completo asignado al pad ${selectedPad + 1}.`);
     });
 
-    playMode.addEventListener('change', () => {
-      pads[selectedPad].mode = playMode.value;
+    chopBtn.addEventListener('click', () => {
+      if (!lastBuffer || chopMarkers.length < 2) return;
+      const count = Math.min(padCount, chopMarkers.length - 1);
+      for (let i = 0; i < count; i++) {
+        pads[i].buffer = sliceBuffer(lastBuffer, chopMarkers[i], chopMarkers[i + 1]);
+        pads[i].name = `Chop ${i + 1}/${count}`;
+        pads[i].mode = 'oneshot';
+        pads[i].reversed = false;
+      }
+      selectPad(0);
       renderPads();
+      setStatus(`${count} chops manuales asignados a los primeros ${count} pads como one-shot.`);
     });
+
+    autoMarkersBtn.addEventListener('click', resetChopMarkers);
 
     reverseBtn.addEventListener('click', () => {
       pads[selectedPad].reversed = !pads[selectedPad].reversed;
@@ -534,37 +738,47 @@
     });
 
     clearPadBtn.addEventListener('click', () => {
-      stopPad(selectedPad);
-      pads[selectedPad] = { name: `Pad ${selectedPad + 1}`, buffer: null, reversed: false, mode: 'oneshot' };
+      pads[selectedPad] = { name: `Pad ${selectedPad + 1}`, buffer: null, reversed: false, mode: 'oneshot', fx: defaultFx() };
       pattern[selectedPad].fill(false);
-      renderPads();
+      selectPad(selectedPad);
       renderSequencer();
     });
 
-    downloadBtn.disabled = true;
     downloadBtn.addEventListener('click', () => {
       if (!lastBlob) return;
       const url = URL.createObjectURL(lastBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'sample.webm';
+      a.download = 'hora-azul-sample.webm';
       a.click();
       URL.revokeObjectURL(url);
     });
 
-    volume.addEventListener('input', () => {
-      volVal.textContent = volume.value;
-      if (masterGain) masterGain.gain.value = Number(volume.value);
+    chopCount.addEventListener('input', () => {
+      chopCountVal.textContent = chopCount.value;
+      if (lastBuffer) resetChopMarkers();
     });
 
-    filter.addEventListener('input', () => {
-      filterVal.textContent = `${filter.value} Hz`;
-      if (masterFilter) masterFilter.frequency.value = Number(filter.value);
+    masterVolume.addEventListener('input', () => {
+      masterVolVal.textContent = masterVolume.value;
+      if (masterGain) masterGain.gain.value = Number(masterVolume.value);
     });
 
-    q.addEventListener('input', () => {
-      qVal.textContent = q.value;
-      if (masterFilter) masterFilter.Q.value = Number(q.value);
+    padVolume.addEventListener('input', () => {
+      pads[selectedPad].fx.volume = Number(padVolume.value);
+      updateFxLabels();
+    });
+    lp.addEventListener('input', () => {
+      pads[selectedPad].fx.lowpass = Number(lp.value);
+      updateFxLabels();
+    });
+    hp.addEventListener('input', () => {
+      pads[selectedPad].fx.highpass = Number(hp.value);
+      updateFxLabels();
+    });
+    reverb.addEventListener('input', () => {
+      pads[selectedPad].fx.reverb = Number(reverb.value);
+      updateFxLabels();
     });
 
     seqPlayBtn.addEventListener('click', async () => {
@@ -596,13 +810,10 @@
       if (n >= 1 && n <= padCount && !e.repeat) triggerPad(n - 1);
     });
 
-    window.addEventListener('keyup', e => {
-      const n = Number(e.key);
-      if (n >= 1 && n <= padCount) stopPad(n - 1);
-    });
-
     renderPads();
     renderSequencer();
+    selectPad(0);
+    drawWaveform();
   </script>
 </body>
 </html>
