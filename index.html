@@ -3,45 +3,608 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hora Azul - Mantenimiento</title>
+  <title>Mini Sampler Web</title>
   <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(180deg, #020617, #0f1b3d, #312e81);
-      color: #f5f3ff;
-      font-family: system-ui, sans-serif;
-      text-align: center;
+    :root {
+      --bg: #111217;
+      --panel: #1b1d25;
+      --panel-2: #232633;
+      --text: #f3f3f7;
+      --muted: #a9adbd;
+      --accent: #ff7a1a;
+      --danger: #ff3b5f;
+      --ok: #50e3a4;
+      --pad: #2c3040;
+      --pad-active: #ff9d45;
+      --line: #343849;
     }
 
-    .box {
-      padding: 32px;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 24px;
-      background: rgba(5,10,24,.75);
-      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #272a36 0, var(--bg) 48%);
+      color: var(--text);
+    }
+
+    main {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 22px;
     }
 
     h1 {
-      margin: 0 0 10px;
-      font-size: 3rem;
-      letter-spacing: -0.05em;
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 4.5rem);
+      letter-spacing: -0.07em;
+      line-height: 0.9;
     }
 
-    p {
+    .subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      max-width: 720px;
+      line-height: 1.5;
+    }
+
+    .transport, .panel {
+      background: linear-gradient(180deg, var(--panel), #161821);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.28);
+    }
+
+    .transport {
+      padding: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      min-width: 290px;
+    }
+
+    button, select, input[type="range"] {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 11px 14px;
+      background: var(--panel-2);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform .08s ease, background .15s ease, opacity .15s ease;
+    }
+
+    button:hover { background: #303548; }
+    button:active { transform: translateY(1px) scale(.98); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+
+    .primary { background: var(--accent); color: #1c1108; font-weight: 800; }
+    .danger { background: var(--danger); color: white; }
+    .ok { background: var(--ok); color: #062116; font-weight: 800; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.35fr .85fr;
+      gap: 18px;
+    }
+
+    .panel { padding: 18px; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
       margin: 0;
-      opacity: .7;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: var(--muted);
+    }
+
+    .pads {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(80px, 1fr));
+      gap: 12px;
+    }
+
+    .pad {
+      min-height: 118px;
+      background: linear-gradient(180deg, #34394b, var(--pad));
+      border: 1px solid #464b61;
+      border-radius: 22px;
+      padding: 12px;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pad.active {
+      background: linear-gradient(180deg, var(--pad-active), #d85c10);
+      color: #1a0d04;
+      box-shadow: 0 0 0 3px rgba(255,122,26,.22), 0 18px 35px rgba(255,122,26,.2);
+    }
+
+    .pad .num {
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+
+    .pad .name {
+      margin-top: 24px;
+      color: inherit;
+      opacity: .8;
+      font-size: .88rem;
+      word-break: break-word;
+    }
+
+    .pad .mode {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      font-size: .72rem;
+      opacity: .72;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .controls {
+      display: grid;
+      gap: 14px;
+    }
+
+    .control {
+      background: rgba(255,255,255,.035);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 13px;
+    }
+
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--muted);
+      font-size: .9rem;
+      margin-bottom: 8px;
+    }
+
+    input[type="range"] { width: 100%; }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.45;
+    }
+
+    .rec-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 99px;
+      background: #555;
+      margin-right: 8px;
+    }
+
+    .recording .rec-dot {
+      background: var(--danger);
+      box-shadow: 0 0 18px var(--danger);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .step {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      background: #2b2f3f;
+      border: 1px solid #3b4054;
+      padding: 0;
+    }
+
+    .step.on { background: var(--accent); }
+    .step.playhead { outline: 2px solid white; }
+
+    .hint {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 920px) {
+      header, .grid { grid-template-columns: 1fr; display: grid; }
+      .transport { justify-content: flex-start; }
+    }
+
+    @media (max-width: 560px) {
+      .pads { grid-template-columns: repeat(2, 1fr); }
+      .pad { min-height: 105px; }
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>503</h1>
-    <p>Hora Azul está temporalmente en mantenimiento.</p>
-  </div>
+  <main>
+    <header>
+      <div>
+        <h1>Mini Sampler Web</h1>
+        <p class="subtitle">
+          Grabá audio desde el micrófono, asignalo a un pad, disparalo como one-shot, loop o gate, aplicá filtro/volumen y armá un patrón básico de 16 pasos.
+        </p>
+      </div>
+      <div class="transport" id="recStatus">
+        <button id="initBtn" class="primary">Activar audio</button>
+        <button id="recordBtn" class="danger" disabled>Grabar</button>
+        <button id="stopBtn" disabled>Stop rec</button>
+        <button id="assignBtn" class="ok" disabled>Asignar a pad seleccionado</button>
+        <div class="status"><span class="rec-dot"></span><span id="statusText">Audio sin activar</span></div>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="panel">
+        <div class="section-title">
+          <h2>Pads</h2>
+          <div class="row">
+            <select id="playMode">
+              <option value="oneshot">One-shot</option>
+              <option value="loop">Loop</option>
+              <option value="gate">Gate</option>
+            </select>
+            <button id="reverseBtn">Reverse pad</button>
+          </div>
+        </div>
+        <div class="pads" id="pads"></div>
+        <p class="hint">
+          Atajos: teclas 1–8 para tocar pads. Click en un pad vacío para seleccionarlo antes de asignar la grabación.
+        </p>
+      </div>
+
+      <aside class="panel controls">
+        <div class="section-title"><h2>FX / Mixer</h2></div>
+        <div class="control">
+          <label><span>Volumen master</span><span id="volVal">0.85</span></label>
+          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.85">
+        </div>
+        <div class="control">
+          <label><span>Filtro low-pass</span><span id="filterVal">16000 Hz</span></label>
+          <input id="filter" type="range" min="200" max="16000" step="1" value="16000">
+        </div>
+        <div class="control">
+          <label><span>Resonancia</span><span id="qVal">0.7</span></label>
+          <input id="q" type="range" min="0.1" max="18" step="0.1" value="0.7">
+        </div>
+        <div class="control">
+          <label><span>Pad seleccionado</span><span id="selectedPadText">1</span></label>
+          <div class="row">
+            <button id="clearPadBtn">Borrar pad</button>
+            <button id="downloadBtn">Descargar último sample</button>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="panel" style="margin-top:18px;">
+      <div class="section-title">
+        <h2>Secuenciador 16 pasos</h2>
+        <div class="row">
+          <label class="status">BPM <input id="bpm" type="number" min="40" max="240" value="90" style="width:70px"></label>
+          <button id="seqPlayBtn">Play</button>
+          <button id="seqStopBtn">Stop</button>
+        </div>
+      </div>
+      <div class="status">Elegí un pad y prendé pasos. Cada fila corresponde al pad indicado.</div>
+      <div id="sequencer"></div>
+    </section>
+  </main>
+
+  <script>
+    const padCount = 8;
+    const padsEl = document.querySelector('#pads');
+    const sequencerEl = document.querySelector('#sequencer');
+    const initBtn = document.querySelector('#initBtn');
+    const recordBtn = document.querySelector('#recordBtn');
+    const stopBtn = document.querySelector('#stopBtn');
+    const assignBtn = document.querySelector('#assignBtn');
+    const statusText = document.querySelector('#statusText');
+    const recStatus = document.querySelector('#recStatus');
+    const playMode = document.querySelector('#playMode');
+    const reverseBtn = document.querySelector('#reverseBtn');
+    const selectedPadText = document.querySelector('#selectedPadText');
+    const clearPadBtn = document.querySelector('#clearPadBtn');
+    const downloadBtn = document.querySelector('#downloadBtn');
+    const seqPlayBtn = document.querySelector('#seqPlayBtn');
+    const seqStopBtn = document.querySelector('#seqStopBtn');
+    const bpmInput = document.querySelector('#bpm');
+
+    const volume = document.querySelector('#volume');
+    const filter = document.querySelector('#filter');
+    const q = document.querySelector('#q');
+    const volVal = document.querySelector('#volVal');
+    const filterVal = document.querySelector('#filterVal');
+    const qVal = document.querySelector('#qVal');
+
+    let audioCtx;
+    let masterGain;
+    let masterFilter;
+    let micStream;
+    let recorder;
+    let chunks = [];
+    let lastBlob = null;
+    let selectedPad = 0;
+    let activeSources = new Map();
+    let seqTimer = null;
+    let currentStep = 0;
+
+    const pads = Array.from({ length: padCount }, (_, i) => ({
+      name: `Pad ${i + 1}`,
+      buffer: null,
+      reversed: false,
+      mode: 'oneshot'
+    }));
+
+    const pattern = Array.from({ length: padCount }, () => Array(16).fill(false));
+
+    function setStatus(text) {
+      statusText.textContent = text;
+    }
+
+    function createAudioGraph() {
+      audioCtx = new AudioContext();
+      masterGain = audioCtx.createGain();
+      masterFilter = audioCtx.createBiquadFilter();
+      masterFilter.type = 'lowpass';
+      masterFilter.frequency.value = Number(filter.value);
+      masterFilter.Q.value = Number(q.value);
+      masterGain.gain.value = Number(volume.value);
+      masterFilter.connect(masterGain).connect(audioCtx.destination);
+    }
+
+    async function initAudio() {
+      if (!audioCtx) createAudioGraph();
+      await audioCtx.resume();
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recordBtn.disabled = false;
+      initBtn.disabled = true;
+      setStatus('Audio activo. Listo para grabar.');
+    }
+
+    function renderPads() {
+      padsEl.innerHTML = '';
+      pads.forEach((pad, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'pad' + (i === selectedPad ? ' active' : '');
+        btn.innerHTML = `<div class="num">${i + 1}</div><div class="name">${pad.buffer ? pad.name : 'Vacío'}</div><div class="mode">${pad.reversed ? 'rev · ' : ''}${pad.mode}</div>`;
+        btn.addEventListener('mousedown', () => {
+          selectedPad = i;
+          selectedPadText.textContent = i + 1;
+          playMode.value = pads[i].mode;
+          renderPads();
+          triggerPad(i);
+        });
+        btn.addEventListener('mouseup', () => stopPad(i));
+        btn.addEventListener('mouseleave', () => { if (pads[i].mode === 'gate') stopPad(i); });
+        padsEl.appendChild(btn);
+      });
+    }
+
+    function renderSequencer() {
+      sequencerEl.innerHTML = '';
+      pattern.forEach((row, padIndex) => {
+        const label = document.createElement('div');
+        label.className = 'status';
+        label.style.marginTop = '12px';
+        label.textContent = `Pad ${padIndex + 1}`;
+        sequencerEl.appendChild(label);
+
+        const steps = document.createElement('div');
+        steps.className = 'steps';
+        row.forEach((isOn, stepIndex) => {
+          const btn = document.createElement('button');
+          btn.className = 'step' + (isOn ? ' on' : '') + (stepIndex === currentStep ? ' playhead' : '');
+          btn.addEventListener('click', () => {
+            pattern[padIndex][stepIndex] = !pattern[padIndex][stepIndex];
+            renderSequencer();
+          });
+          steps.appendChild(btn);
+        });
+        sequencerEl.appendChild(steps);
+      });
+    }
+
+    function makePlayableBuffer(buffer, reversed) {
+      if (!reversed) return buffer;
+      const rev = audioCtx.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+      for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+        const data = buffer.getChannelData(ch);
+        const out = rev.getChannelData(ch);
+        for (let i = 0; i < data.length; i++) out[i] = data[data.length - 1 - i];
+      }
+      return rev;
+    }
+
+    function triggerPad(index, when = 0) {
+      const pad = pads[index];
+      if (!audioCtx || !pad.buffer) return;
+
+      if (pad.mode !== 'loop') stopPad(index);
+
+      const source = audioCtx.createBufferSource();
+      source.buffer = makePlayableBuffer(pad.buffer, pad.reversed);
+      source.loop = pad.mode === 'loop';
+      source.connect(masterFilter);
+      source.start(when ? when : audioCtx.currentTime);
+
+      if (!activeSources.has(index)) activeSources.set(index, []);
+      activeSources.get(index).push(source);
+      source.onended = () => {
+        const list = activeSources.get(index) || [];
+        activeSources.set(index, list.filter(s => s !== source));
+      };
+    }
+
+    function stopPad(index) {
+      const pad = pads[index];
+      if (pad.mode !== 'gate' && pad.mode !== 'loop') return;
+      const sources = activeSources.get(index) || [];
+      sources.forEach(src => { try { src.stop(); } catch (_) {} });
+      activeSources.set(index, []);
+    }
+
+    async function decodeBlobToBuffer(blob) {
+      const arrayBuffer = await blob.arrayBuffer();
+      return await audioCtx.decodeAudioData(arrayBuffer);
+    }
+
+    initBtn.addEventListener('click', async () => {
+      try { await initAudio(); }
+      catch (err) { setStatus('No pude acceder al micrófono. Revisá permisos del navegador.'); }
+    });
+
+    recordBtn.addEventListener('click', () => {
+      chunks = [];
+      recorder = new MediaRecorder(micStream);
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = () => {
+        lastBlob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+        assignBtn.disabled = false;
+        downloadBtn.disabled = false;
+        recStatus.classList.remove('recording');
+        setStatus('Grabación lista. Asignala a un pad.');
+      };
+      recorder.start();
+      recStatus.classList.add('recording');
+      recordBtn.disabled = true;
+      stopBtn.disabled = false;
+      setStatus('Grabando...');
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (recorder && recorder.state === 'recording') recorder.stop();
+      recordBtn.disabled = false;
+      stopBtn.disabled = true;
+    });
+
+    assignBtn.addEventListener('click', async () => {
+      if (!lastBlob) return;
+      const buffer = await decodeBlobToBuffer(lastBlob);
+      pads[selectedPad].buffer = buffer;
+      pads[selectedPad].name = `Grabación ${new Date().toLocaleTimeString()}`;
+      pads[selectedPad].mode = playMode.value;
+      renderPads();
+      setStatus(`Sample asignado al pad ${selectedPad + 1}.`);
+    });
+
+    playMode.addEventListener('change', () => {
+      pads[selectedPad].mode = playMode.value;
+      renderPads();
+    });
+
+    reverseBtn.addEventListener('click', () => {
+      pads[selectedPad].reversed = !pads[selectedPad].reversed;
+      renderPads();
+    });
+
+    clearPadBtn.addEventListener('click', () => {
+      stopPad(selectedPad);
+      pads[selectedPad] = { name: `Pad ${selectedPad + 1}`, buffer: null, reversed: false, mode: 'oneshot' };
+      pattern[selectedPad].fill(false);
+      renderPads();
+      renderSequencer();
+    });
+
+    downloadBtn.disabled = true;
+    downloadBtn.addEventListener('click', () => {
+      if (!lastBlob) return;
+      const url = URL.createObjectURL(lastBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sample.webm';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    volume.addEventListener('input', () => {
+      volVal.textContent = volume.value;
+      if (masterGain) masterGain.gain.value = Number(volume.value);
+    });
+
+    filter.addEventListener('input', () => {
+      filterVal.textContent = `${filter.value} Hz`;
+      if (masterFilter) masterFilter.frequency.value = Number(filter.value);
+    });
+
+    q.addEventListener('input', () => {
+      qVal.textContent = q.value;
+      if (masterFilter) masterFilter.Q.value = Number(q.value);
+    });
+
+    seqPlayBtn.addEventListener('click', async () => {
+      if (!audioCtx) await initAudio();
+      clearInterval(seqTimer);
+      currentStep = 0;
+      const tick = () => {
+        const stepTime = audioCtx.currentTime + 0.015;
+        pattern.forEach((row, padIndex) => {
+          if (row[currentStep]) triggerPad(padIndex, stepTime);
+        });
+        renderSequencer();
+        currentStep = (currentStep + 1) % 16;
+      };
+      tick();
+      const intervalMs = (60 / Number(bpmInput.value)) * 1000 / 4;
+      seqTimer = setInterval(tick, intervalMs);
+    });
+
+    seqStopBtn.addEventListener('click', () => {
+      clearInterval(seqTimer);
+      seqTimer = null;
+      currentStep = 0;
+      renderSequencer();
+    });
+
+    window.addEventListener('keydown', e => {
+      const n = Number(e.key);
+      if (n >= 1 && n <= padCount && !e.repeat) triggerPad(n - 1);
+    });
+
+    window.addEventListener('keyup', e => {
+      const n = Number(e.key);
+      if (n >= 1 && n <= padCount) stopPad(n - 1);
+    });
+
+    renderPads();
+    renderSequencer();
+  </script>
 </body>
 </html>
+
 
