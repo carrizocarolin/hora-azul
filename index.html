@@ -298,7 +298,8 @@
         <div class="control">
           <label><span>Pad seleccionado</span><span id="selectedPadText">1</span></label>
           <div class="row">
-            <button id="clearPadBtn">Borrar pad</button>
+            <button id="clearPadBtn">Borrar sample del pad</button>
+            <button id="clearAllPadsBtn">Borrar todos los samples</button>
             <button id="downloadBtn">Descargar último sample</button>
           </div>
         </div>
@@ -338,6 +339,7 @@
     const reverseBtn = document.querySelector('#reverseBtn');
     const selectedPadText = document.querySelector('#selectedPadText');
     const clearPadBtn = document.querySelector('#clearPadBtn');
+    const clearAllPadsBtn = document.querySelector('#clearAllPadsBtn');
     const downloadBtn = document.querySelector('#downloadBtn');
     const seqPlayBtn = document.querySelector('#seqPlayBtn');
     const seqStopBtn = document.querySelector('#seqStopBtn');
@@ -506,12 +508,26 @@
       };
     }
 
-    function stopPad(index) {
-      const pad = pads[index];
-      if (pad.mode !== 'gate' && pad.mode !== 'loop') return;
+    function stopPadSources(index) {
       const sources = activeSources.get(index) || [];
       sources.forEach(src => { try { src.stop(); } catch (_) {} });
       activeSources.set(index, []);
+    }
+
+    function stopPad(index) {
+      const pad = pads[index];
+      if (pad.mode !== 'gate' && pad.mode !== 'loop') return;
+      stopPadSources(index);
+    }
+
+    function stopAllPads() {
+      for (let i = 0; i < padCount; i++) stopPadSources(i);
+    }
+
+    function clearPad(index) {
+      stopPadSources(index);
+      pads[index] = { name: `Pad ${index + 1}`, buffer: null, reversed: false, mode: 'oneshot' };
+      pattern[index].fill(false);
     }
 
     async function decodeBlobToBuffer(blob) {
@@ -617,11 +633,20 @@
     });
 
     clearPadBtn.addEventListener('click', () => {
-      stopPad(selectedPad);
-      pads[selectedPad] = { name: `Pad ${selectedPad + 1}`, buffer: null, reversed: false, mode: 'oneshot' };
-      pattern[selectedPad].fill(false);
+      clearPad(selectedPad);
       renderPads();
       renderSequencer();
+      setStatus(`Sample borrado del pad ${selectedPad + 1}.`);
+      setFinalStatus(`Sample borrado del pad ${selectedPad + 1}.`);
+    });
+
+    clearAllPadsBtn.addEventListener('click', () => {
+      stopAllPads();
+      pads.forEach((_, index) => clearPad(index));
+      renderPads();
+      renderSequencer();
+      setStatus('Todos los samples fueron borrados.');
+      setFinalStatus('Todos los samples fueron borrados.');
     });
 
     downloadBtn.disabled = true;
@@ -661,7 +686,9 @@
     seqPlayBtn.addEventListener('click', async () => {
       if (!audioCtx) await initAudio();
       clearInterval(seqTimer);
+      stopAllPads();
       currentStep = 0;
+      setFinalStatus('Producción sonando. Tocá Stop para detenerla.');
       const tick = () => {
         const stepTime = audioCtx.currentTime + 0.015;
         pattern.forEach((row, padIndex) => {
@@ -679,7 +706,9 @@
       clearInterval(seqTimer);
       seqTimer = null;
       currentStep = 0;
+      stopAllPads();
       renderSequencer();
+      setFinalStatus('Producción detenida.');
     });
 
     window.addEventListener('keydown', e => {
