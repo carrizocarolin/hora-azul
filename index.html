@@ -73,9 +73,7 @@
       min-width: 290px;
     }
 
-    button, select, input[type="range"] {
-      font: inherit;
-    }
+    button, select, input[type="range"] { font: inherit; }
 
     button {
       border: 0;
@@ -142,10 +140,7 @@
       box-shadow: 0 0 0 3px rgba(255,122,26,.22), 0 18px 35px rgba(255,122,26,.2);
     }
 
-    .pad .num {
-      font-weight: 900;
-      font-size: 1.1rem;
-    }
+    .pad .num { font-weight: 900; font-size: 1.1rem; }
 
     .pad .name {
       margin-top: 24px;
@@ -165,10 +160,7 @@
       letter-spacing: .08em;
     }
 
-    .controls {
-      display: grid;
-      gap: 14px;
-    }
+    .controls { display: grid; gap: 14px; }
 
     .control {
       background: rgba(255,255,255,.035);
@@ -210,7 +202,8 @@
       margin-right: 8px;
     }
 
-    .recording .rec-dot {
+    .recording .rec-dot,
+    .final-recording .rec-dot {
       background: var(--danger);
       box-shadow: 0 0 18px var(--danger);
     }
@@ -262,8 +255,8 @@
       </div>
       <div class="transport" id="recStatus">
         <button id="initBtn" class="primary">Activar audio</button>
-        <button id="recordBtn" class="danger" disabled>Grabar</button>
-        <button id="stopBtn" disabled>Stop rec</button>
+        <button id="recordBtn" class="danger" disabled>Grabar sample</button>
+        <button id="stopBtn" disabled>Stop sample</button>
         <button id="assignBtn" class="ok" disabled>Asignar a pad seleccionado</button>
         <div class="status"><span class="rec-dot"></span><span id="statusText">Audio sin activar</span></div>
       </div>
@@ -312,16 +305,21 @@
       </aside>
     </section>
 
-    <section class="panel" style="margin-top:18px;">
+    <section class="panel" style="margin-top:18px;" id="finalRecPanel">
       <div class="section-title">
         <h2>Secuenciador 16 pasos</h2>
         <div class="row">
           <label class="status">BPM <input id="bpm" type="number" min="40" max="240" value="90" style="width:70px"></label>
           <button id="seqPlayBtn">Play</button>
           <button id="seqStopBtn">Stop</button>
+          <button id="finalRecordBtn" class="danger" disabled>Grabar producción</button>
+          <button id="finalStopBtn" disabled>Stop producción</button>
+          <button id="finalDownloadBtn" class="ok" disabled>Descargar producción</button>
         </div>
       </div>
-      <div class="status">Elegí un pad y prendé pasos. Cada fila corresponde al pad indicado.</div>
+      <div class="status">
+        <span class="rec-dot"></span><span id="finalStatusText">Elegí un pad y prendé pasos. Cada fila corresponde al pad indicado.</span>
+      </div>
       <div id="sequencer"></div>
     </section>
   </main>
@@ -345,6 +343,12 @@
     const seqStopBtn = document.querySelector('#seqStopBtn');
     const bpmInput = document.querySelector('#bpm');
 
+    const finalRecPanel = document.querySelector('#finalRecPanel');
+    const finalRecordBtn = document.querySelector('#finalRecordBtn');
+    const finalStopBtn = document.querySelector('#finalStopBtn');
+    const finalDownloadBtn = document.querySelector('#finalDownloadBtn');
+    const finalStatusText = document.querySelector('#finalStatusText');
+
     const volume = document.querySelector('#volume');
     const filter = document.querySelector('#filter');
     const q = document.querySelector('#q');
@@ -355,6 +359,7 @@
     let audioCtx;
     let masterGain;
     let masterFilter;
+    let finalDestination;
     let micStream;
     let recorder;
     let chunks = [];
@@ -363,6 +368,10 @@
     let activeSources = new Map();
     let seqTimer = null;
     let currentStep = 0;
+
+    let finalRecorder = null;
+    let finalChunks = [];
+    let finalBlob = null;
 
     const pads = Array.from({ length: padCount }, (_, i) => ({
       name: `Pad ${i + 1}`,
@@ -377,15 +386,39 @@
       statusText.textContent = text;
     }
 
+    function setFinalStatus(text) {
+      finalStatusText.textContent = text;
+    }
+
+    function getSupportedMimeType() {
+      const types = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/ogg'
+      ];
+      return types.find(type => MediaRecorder.isTypeSupported(type)) || '';
+    }
+
+    function getFileExtension(blob) {
+      if (blob.type.includes('ogg')) return 'ogg';
+      return 'webm';
+    }
+
     function createAudioGraph() {
       audioCtx = new AudioContext();
       masterGain = audioCtx.createGain();
       masterFilter = audioCtx.createBiquadFilter();
+      finalDestination = audioCtx.createMediaStreamDestination();
+
       masterFilter.type = 'lowpass';
       masterFilter.frequency.value = Number(filter.value);
       masterFilter.Q.value = Number(q.value);
       masterGain.gain.value = Number(volume.value);
-      masterFilter.connect(masterGain).connect(audioCtx.destination);
+
+      masterFilter.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+      masterGain.connect(finalDestination);
     }
 
     async function initAudio() {
@@ -393,8 +426,10 @@
       await audioCtx.resume();
       micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       recordBtn.disabled = false;
+      finalRecordBtn.disabled = false;
       initBtn.disabled = true;
-      setStatus('Audio activo. Listo para grabar.');
+      setStatus('Audio activo. Listo para grabar samples.');
+      setFinalStatus('Audio activo. Ya podés grabar la producción final.');
     }
 
     function renderPads() {
@@ -484,6 +519,54 @@
       return await audioCtx.decodeAudioData(arrayBuffer);
     }
 
+    function downloadBlob(blob, filename) {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function startFinalRecording() {
+      if (!audioCtx || !finalDestination) return;
+
+      finalChunks = [];
+      finalBlob = null;
+      finalDownloadBtn.disabled = true;
+
+      const mimeType = getSupportedMimeType();
+      finalRecorder = mimeType
+        ? new MediaRecorder(finalDestination.stream, { mimeType })
+        : new MediaRecorder(finalDestination.stream);
+
+      finalRecorder.ondataavailable = e => {
+        if (e.data && e.data.size > 0) finalChunks.push(e.data);
+      };
+
+      finalRecorder.onstop = () => {
+        finalBlob = new Blob(finalChunks, { type: finalRecorder.mimeType || 'audio/webm' });
+        finalRecordBtn.disabled = false;
+        finalStopBtn.disabled = true;
+        finalDownloadBtn.disabled = false;
+        finalRecPanel.classList.remove('final-recording');
+        setFinalStatus('Producción final grabada. Ya podés descargarla.');
+      };
+
+      finalRecorder.start();
+      finalRecPanel.classList.add('final-recording');
+      finalRecordBtn.disabled = true;
+      finalStopBtn.disabled = false;
+      setFinalStatus('Grabando producción final... Tocá Play en el secuenciador si todavía no está sonando.');
+    }
+
+    function stopFinalRecording() {
+      if (finalRecorder && finalRecorder.state === 'recording') {
+        finalRecorder.stop();
+      }
+    }
+
     initBtn.addEventListener('click', async () => {
       try { await initAudio(); }
       catch (err) { setStatus('No pude acceder al micrófono. Revisá permisos del navegador.'); }
@@ -504,7 +587,7 @@
       recStatus.classList.add('recording');
       recordBtn.disabled = true;
       stopBtn.disabled = false;
-      setStatus('Grabando...');
+      setStatus('Grabando sample...');
     });
 
     stopBtn.addEventListener('click', () => {
@@ -544,12 +627,20 @@
     downloadBtn.disabled = true;
     downloadBtn.addEventListener('click', () => {
       if (!lastBlob) return;
-      const url = URL.createObjectURL(lastBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'sample.webm';
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadBlob(lastBlob, 'sample.webm');
+    });
+
+    finalRecordBtn.addEventListener('click', async () => {
+      if (!audioCtx) await initAudio();
+      startFinalRecording();
+    });
+
+    finalStopBtn.addEventListener('click', stopFinalRecording);
+
+    finalDownloadBtn.addEventListener('click', () => {
+      if (!finalBlob) return;
+      const ext = getFileExtension(finalBlob);
+      downloadBlob(finalBlob, `produccion-final.${ext}`);
     });
 
     volume.addEventListener('input', () => {
@@ -606,5 +697,3 @@
   </script>
 </body>
 </html>
-
-
